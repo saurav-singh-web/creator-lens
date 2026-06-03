@@ -15,12 +15,14 @@ chat_sessions = {}
 @router.post("/ingest")
 async def ingest_videos(request: VideoIngestRequest):
     try:
+        # YouTube ingestion
         yt_id = extract_video_id(request.youtube_url)
         yt_transcript = get_transcript(yt_id)
         yt_metadata = get_metadata(yt_id)
         yt_chunks = ingest_transcript(yt_transcript, yt_metadata, "A")
         video_store["A"] = yt_metadata
 
+        # Instagram ingestion — uses fallback internally, never raises
         ig_data = get_instagram_data(request.instagram_url)
         ig_chunks = ingest_transcript(
             ig_data["transcript"],
@@ -36,6 +38,8 @@ async def ingest_videos(request: VideoIngestRequest):
             "video_b": ig_data["metadata"]
         }
     except Exception as e:
+        import traceback
+        traceback.print_exc()
         return {"success": False, "message": str(e)}
 
 @router.post("/chat")
@@ -52,7 +56,8 @@ async def chat(message: ChatMessage):
             "history": history,
             "retrieved_chunks": [],
             "answer": "",
-            "citations": []
+            "citations": [],
+            "augmented_prompt": ""
         }
 
         result = rag_chain.invoke(state)

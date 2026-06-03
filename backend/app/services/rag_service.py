@@ -1,13 +1,16 @@
 from langgraph.graph import StateGraph, END
-from langchain_openai import ChatOpenAI
+from langchain_groq import ChatGroq
 from app.services.vector_service import search_similar
 from app.core.config import settings
 from typing import TypedDict, List
 
-llm = ChatOpenAI(
+import os
+from dotenv import load_dotenv
+load_dotenv()
+
+llm = ChatGroq(
     model=settings.llm_model,
-    api_key=settings.openai_api_key,
-    streaming=True,
+    api_key=os.getenv("GROQ_API_KEY", ""),
     temperature=0.7
 )
 

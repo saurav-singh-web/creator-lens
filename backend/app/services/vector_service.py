@@ -3,13 +3,14 @@ from qdrant_client.models import (
     Distance, VectorParams, PointStruct, Filter,
     FieldCondition, MatchValue
 )
-from langchain.text_splitter import RecursiveCharacterTextSplitter
-from openai import OpenAI
+from langchain_text_splitters import RecursiveCharacterTextSplitter
+from sentence_transformers import SentenceTransformer
 from app.core.config import settings
 import uuid
 
 client = QdrantClient(url=settings.qdrant_url)
-openai_client = OpenAI(api_key=settings.openai_api_key)
+embedder = SentenceTransformer("all-MiniLM-L6-v2")
+VECTOR_SIZE = 384
 
 def ensure_collection():
     collections = client.get_collections().collections
@@ -18,17 +19,13 @@ def ensure_collection():
         client.create_collection(
             collection_name=settings.qdrant_collection,
             vectors_config=VectorParams(
-                size=1536,
+                size=VECTOR_SIZE,
                 distance=Distance.COSINE
             )
         )
 
-def embed_text(text: str) -> list[float]:
-    response = openai_client.embeddings.create(
-        input=text,
-        model=settings.embedding_model
-    )
-    return response.data[0].embedding
+def embed_text(text: str) -> list:
+    return embedder.encode(text).tolist()
 
 def ingest_transcript(transcript: str, metadata: dict, video_id: str):
     ensure_collection()
