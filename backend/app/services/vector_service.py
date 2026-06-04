@@ -8,7 +8,10 @@ from sentence_transformers import SentenceTransformer
 from app.core.config import settings
 import uuid
 
-client = QdrantClient(url=settings.qdrant_url)
+client = QdrantClient(
+    url=settings.qdrant_url,
+    api_key=settings.qdrant_api_key if settings.qdrant_api_key else None
+)
 embedder = SentenceTransformer("all-MiniLM-L6-v2")
 VECTOR_SIZE = 384
 
