@@ -4,7 +4,7 @@ from qdrant_client.models import (
     FieldCondition, MatchValue
 )
 from langchain_text_splitters import RecursiveCharacterTextSplitter
-from sentence_transformers import SentenceTransformer
+from fastembed import TextEmbedding
 from app.core.config import settings
 import uuid
 
@@ -12,7 +12,7 @@ client = QdrantClient(
     url=settings.qdrant_url,
     api_key=settings.qdrant_api_key if settings.qdrant_api_key else None
 )
-embedder = SentenceTransformer("all-MiniLM-L6-v2")
+embedder = TextEmbedding("BAAI/bge-small-en-v1.5")
 VECTOR_SIZE = 384
 
 def ensure_collection():
@@ -28,7 +28,8 @@ def ensure_collection():
         )
 
 def embed_text(text: str) -> list:
-    return embedder.encode(text).tolist()
+    embeddings = list(embedder.embed([text]))
+    return embeddings[0].tolist()
 
 def ingest_transcript(transcript: str, metadata: dict, video_id: str):
     ensure_collection()
